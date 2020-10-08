@@ -1,0 +1,646 @@
+<html>
+
+<head>
+    <title> COS426 Assignment 2 &mdash; Modeling &mdash; Writeup</title>
+    <link href="css/style.css" type="text/css" rel="stylesheet" />
+</head>
+
+<body>
+    <script src="js/student.js"> </script>
+    <script src="js/writeup.js"> </script>
+    <div class="top">
+        <div class="main_div">
+            <h1>
+                <div class=assignment>COS426 Assignment 2</div>Modeling &mdash; Writeup
+            </h1>
+            <h2>Switch to: <a href='index.html'>Interactive Editor</a></h2>
+            <br>
+            <div id='collaboration'>
+                <div>
+                Collaboration Statement:
+                </div>
+                    <br>
+                <div>
+                    <em>
+                        Under penalty of academic dishonesty (as outlined in RRR)
+                        my digital signature below verifies that the following is true:
+                        <ul>
+                            <p>
+                                that all images in this writeup were generated directly by my solution code
+                                or provided by the course staff (exception: art contest submissions
+                                may pass through intermediary software like GIMP)
+                            </p>
+                            <p>
+                                that no other student has viewed my writeup explanations
+                                or my writeup images
+                            </p>
+                            <p>
+                                that my solution code is my own work; particularly that
+                                my solution was not copied from any other
+                                student's solution code, and that no other student
+                                copied their solution directly code from me
+                            </p>
+                            <p>
+                                that I did not discuss assignment specifics or view
+                                the solution code of any other student besides that of my (optional) partner
+                            </p>
+                            <p>
+                                that I have followed all other course collaboration
+                                and course plagiarism policies as written on the course website.
+                            </p>
+                        </ul>
+                    </em>
+                    <p>
+                        <strong>
+                            YOUR NAME HERE  (your-netid-here)
+                        </strong>
+                    </p>
+
+                    <p>
+                        Collaborated with: PARTNER NAME HERE (partner-netid-here)
+                    </p>
+                    <br>
+                </div>
+            </div>
+            <div class='selectable'>
+                <h2 id='student'></h2>
+                Features Implemented:
+                <ul>
+                    <li>(0.0) <a href='#Translation'>Translation</a></li>
+                    <li>(1.0) <a href='#Rotation'>Rotation</a></li>
+                    <li>(0.5) <a href='#Scale'>Scale</a></li>
+                    <li>(2.0) <a href='#Traversal'>Traversal</a></li>
+                    <li>(0.5) <a href='#Face+Area'>Face Area</a></li>
+                    <li>(0.5) <a href='#Per-vertex+Normals'>Per-vertex Normals</a></li>
+                    <li>(0.5) <a href='#Average+Edge+Lengths'>Average Edge Lengths</a></li>
+                    <li>(1.0) <a href='#Twist'>Twist</a></li>
+                    <li>(1.0) <a href='#Inflate'>Inflate</a></li>
+                    <li>(1.0) <a href='#Wacky'>Wacky</a></li>
+                    <li>(1.0) <a href='#Noise'>Noise</a></li>
+                    <li>(1.0) <a href='#Uniform+Laplacian+Smoothing'>Uniform Laplacian Smoothing</a></li>
+                    <li>(1.0) <a href='#Uniform+Sharpening'>Uniform Sharpening</a></li>
+                    <li>(1.5) <a href='#Curvature-flow+Laplacian+Smoothing'>Curvature-flow Laplacian Smoothing</a></li>
+                    <li>(1.0) <a href='#Scale-Dependent+Smoothing'>Scale-Dependent Smoothing</a></li>
+                    <li>(3.0) <a href='#Implicit+Smoothing'>Implicit Smoothing</a></li>
+                    <li>(2.0) <a href='#Curvature'>Curvature</a></li>
+                    <li>(0.5) <a href='#Triangulate'>Triangulate</a></li>
+                    <li>(2.0) <a href='#Truncate'>Truncate</a></li>
+                    <li>(2.0) <a href='#Extrude'>Extrude</a></li>
+                    <li>(2.0) <a href='#Bevel'>Bevel</a></li>
+                    <li>(1.0) <a href='#Split+Long+Edges'>Split Long Edges</a></li>
+                    <li>(1.5) <a href='#Triangle+Topology'>Triangle Topology</a></li>
+                    <li>(1.5) <a href='#Loop+Subdivision'>Loop Subdivision</a></li>
+                    <li>(1.5) <a href='#Quad+Topology'>Quad Topology</a></li>
+                    <li>(1.5) <a href='#Catmull-Clark+Subdivision'>Catmull-Clark Subdivision</a></li>
+                    <li>(1.0) <a href='#Art+Contest'>Art Contest</a></li>
+                </ul>
+            </div>
+            <div>
+                <hr>
+                <a name='Translation'></a>
+                <h2>Translation</h2>
+
+                <hr>
+                <p>
+                    This feature was implemented by the course staff.
+                    I used it as an example of how to loop over the vertices of a mesh.
+                </p>
+
+                <p>
+                    Here is an example output where the mesh is translated
+                    <a href='batch.html?Base_Mesh=cube.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Translation=3;0;0'>
+                        by 3 along the x axis
+                    </a>:
+                    <br>
+                    <img src='results/translate3.png'>
+                </p>
+                <p>
+                    I did not encounter any particular challenges in implementing this.
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following results:
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Rotation'></a>
+                <h2>Rotation</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Rotation goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Rotation=1;0;0'>
+                        Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Rotation=1;0;0
+                    </a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Rotation=0;0.75;0'>Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Rotation=0;0.75;0</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Rotation=0;0;1.5'>Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Rotation=0;0;1.5</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Scale'></a>
+                <h2>Scale</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Scale goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=cube.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Scale=0.5'>Base_Mesh=cube.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Scale=0.5</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=cube.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Scale=2'>Base_Mesh=cube.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Scale=2</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Traversal'></a>
+                <h2>Traversal</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Traversal goes here...)
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Face+Area'></a>
+                <h2>Face Area</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Face Area goes here...)
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Per-vertex+Normals'></a>
+                <h2>Per-vertex Normals</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Per-vertex Normals goes here...)
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Average+Edge+Lengths'></a>
+                <h2>Average Edge Lengths</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Average Edge Lengths goes here...)
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Twist'></a>
+                <h2>Twist</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Twist goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=large-cube.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Twist=0.5'>Base_Mesh=large-cube.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Twist=0.5</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=large-cube.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Twist=4'>Base_Mesh=large-cube.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Twist=4</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Inflate'></a>
+                <h2>Inflate</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Inflate goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the
+                    following results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Inflate=1'>Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Inflate=1</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Inflate=-1'>Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Inflate=-1</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Wacky'></a>
+                <h2>Wacky</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Wacky goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at
+                    least include at least two.
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Noise'></a>
+                <h2>Noise</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Noise
+                    goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want,
+                    but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=hand.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Noise=0.25'>Base_Mesh=hand.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Noise=0.25</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=hand.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Noise=1'>Base_Mesh=hand.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Noise=1</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Uniform+Laplacian+Smoothing'></a>
+                <h2>Uniform Laplacian Smoothing</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Uniform Laplacian Smoothing goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=hand-simple.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Smooth=15;0.05;false;false;false'>Base_Mesh=hand-simple.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Smooth=15;0.05;false;false;false</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=sphere-2res.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=100;0.05;false;false;false'>Base_Mesh=sphere-2res.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=100;0.05;false;false;false</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Uniform+Sharpening'></a>
+                <h2>Uniform Sharpening</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Uniform Sharpening goes
+                    here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=cow.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Sharpen=100;0.001'>Base_Mesh=cow.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Sharpen=100;0.001</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=octopus.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Sharpen=100;0.001'>Base_Mesh=octopus.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Sharpen=100;0.001</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Curvature-flow+Laplacian+Smoothing'></a>
+                <h2>Curvature-flow
+                    Laplacian
+                    Smoothing</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Curvature-flow Laplacian Smoothing goes
+                    here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=hand-simple.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=15;0.05;true;false;false'>Base_Mesh=hand-simple.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=15;0.05;true;false;false</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=sphere-2res.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=100;0.05;true;false;false'>Base_Mesh=sphere-2res.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=100;0.05;true;false;false</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Scale-Dependent+Smoothing'></a>
+                <h2>Scale-Dependent Smoothing</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Scale-Dependent Smoothing goes
+                    here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=hand-simple.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=15;0.05;false;true;false'>Base_Mesh=hand-simple.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=15;0.05;false;true;false</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=sphere-2res.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=100;0.05;true;true;false'>Base_Mesh=sphere-2res.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=100;0.05;true;true;false</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Implicit+Smoothing'></a>
+                <h2>Implicit Smoothing</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Implicit Smoothing goes
+                    here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=hand-simple.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=1;15;true;false;true'>Base_Mesh=hand-simple.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=1;15;true;false;true</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=sphere-2res.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=1;30;true;false;true'>Base_Mesh=sphere-2res.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Smooth=1;30;true;false;true</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Truncate'></a>
+                <h2>Truncate</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Truncate goes
+                    here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=dodecahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Truncate=0.448'>Base_Mesh=dodecahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Truncate=0.448</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;1&Truncate=0.25'>Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;1&Truncate=0.25</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Extrude'></a>
+                <h2>Extrude</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Extrude goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Extrude=0.5'>Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Extrude=0.5</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;2&Extrude=1'>Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;2&Extrude=1</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Bevel'></a>
+                <h2>Bevel</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Bevel goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Bevel=0.5'</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Bevel=0.5'>Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;2&Extrude=1</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Split+Long+Edges'></a>
+                <h2>Split Long Edges</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Split Long Edges goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;1&Split_Long_Edges=0.1'>Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;1&Split_Long_Edges=0.1</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;1&Split_Long_Edges=1'>Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;1&Split_Long_Edges=1</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Triangle+Topology'></a>
+                <h2>Triangle Topology</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Triangle Topology goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Tri_Topology=1'>Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Tri_Topology=1</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Tri_Topology=3'>Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Tri_Topology=3</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                    <a href='batch.html?Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;1&Tri_Topology=1'>Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;1&Tri_Topology=1</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Loop+Subdivision'></a>
+                <h2>Loop Subdivision</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Loop Subdivision goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Loop_Subdivision=3'>Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Loop_Subdivision=3</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=dodecahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;5&Loop_Subdivision=1'>Base_Mesh=dodecahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;5&Loop_Subdivision=1</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Loop_Subdivision=3'>Base_Mesh=teapot.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Loop_Subdivision=3</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Quad+Topology'></a>
+                <h2>Quad Topology</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Quad Topology goes here...)
+                </p>
+                <p>
+                    You can include as many results as you want, but please at least include the following
+                    results:
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=dodecahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Quad_Topology=1'>Base_Mesh=dodecahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Quad_Topology=1</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Quad_Topology=3'>Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Quad_Topology=3</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+                <p>
+                    <a href='batch.html?Base_Mesh=dodecahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;4&Quad_Topology=2'>Base_Mesh=dodecahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;4&Quad_Topology=2</a>
+                    <br>
+                    <img src='results/placeholder.png'>
+                </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Catmull-Clark+Subdivision'></a>
+                <h2>Catmull-Clark Subdivision</h2>
+                <hr>
+                <p>
+                    (Your description of your implementation of Catmull-Clark Subdivision goes here...)
+                    <p>
+                        You can include as many results as you want, but please at least include the following
+                        results:
+                    </p>
+                    <p>
+                        <a href='batch.html?Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Catmull-Clark=2'>Base_Mesh=tetrahedron.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Catmull-Clark=2</a>
+                        <br>
+                        <img src='results/placeholder.png'>
+                    </p>
+                    <p>
+                        <a href='batch.html?Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Catmull-Clark=4'>Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Catmull-Clark=4</a>
+                        <br>
+                        <img src='results/placeholder.png'>
+                    </p>
+                    <p>
+                        <a href='batch.html?Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;1,2&Catmull-Clark=3'>Base_Mesh=cube.obj&Display_Settings=false;true;flat;false;false;true;false;true;false&Selection=;1,2&Catmull-Clark=3</a>
+                        <br>
+                        <img src='results/placeholder.png'>
+                    </p>
+                    <p>
+                        <a href='batch.html?Base_Mesh=hand-simple.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Selection=;5,34,66,78,97,109,129,135,167,168,170,171,179,180,181,184,75&Catmull-Clark=3'>Base_Mesh=hand-simple.obj&Display_Settings=false;false;flat;false;false;true;false;true;false&Selection=;5,34,66,78,97,109,129,135,167,168,170,171,179,180,181,184,75&Catmull-Clark=3</a>
+                        <br>
+                        <img src='results/placeholder.png'>
+                    </p>
+            </div>
+            <div>
+                <hr>
+                <a name='Art+Contest' id="art-contest"></a>
+                <h2>Art Contest</h2>
+                <hr>
+                <p>
+                    (Your description of your Art Contest submission goes here...)
+                </p>
+                <p>
+                    You can include as many submissions as you want, but please submit at least one.
+                </p>
+                <p>
+                    Please your name file(s) so that it starts with the string
+                    "art-netid", where netid is your netid (e.g. "art-rbova-whackyBug.gif"
+                    and "art-rbova-coolColors.jpg"). This labeling will allow us to
+                    easily pull these images for art contests :)
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

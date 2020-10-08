@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- the next three lines try to discourage browser from keeping page in cache -->
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="-1">
+    <meta http-equiv="cache-control" content="no-store">
+
+    <title> COS426 Assignment 2 &mdash; Mesh Processing &mdash; Interactive</title>
+    <link href="css/style.css" type="text/css" rel="stylesheet"/>
+</head>
+
+<body>
+    <script src="libjs/gif/LZWEncoder.js"></script>
+    <script src="libjs/gif/NeuQuant.js"></script>
+    <script src="libjs/gif/GIFEncoder.js"></script>
+    <script src="libjs/gif/b64.js"></script>
+
+    <script src="libjs/dat.gui.js"> </script>
+    <script src="libjs/stats.min.js"></script>
+    <script src="libjs/three.min.js"></script>
+    <script src="libjs/TrackballControls.js"></script>
+    <script src="libjs/Projector.js"></script>
+
+    <script src="libjs/OBJLoader.js"></script>
+    <script src="libjs/math.js"></script>
+
+    <script src="coursejs/parser.js"> </script>
+    <script src="coursejs/guiConfig.js"></script>
+    <script src="coursejs/gui.js"></script>
+    <script src="coursejs/renderer.js"></script>
+    <script src="coursejs/scene.js"></script>
+    <script src="js/filters.js"></script>
+    <script src="js/student.js"> </script>
+    <script src="js/meshUtils.js"> </script>
+    <script src="coursejs/meshGeometry.js"> </script>
+    <script src="js/mesh.js"> </script>
+
+    <script src="coursejs/main.js"> </script>
+
+    <div id="stats"></div>
+    <div id="main_div">
+        <h1> <span class="assignment">COS426 Assignment 2<br></span> Mesh Processing </h1>
+        <h2 id="student"></h2>
+        <canvas id="canvas"> </canvas>
+    </div>
+    <div id="alert_div" title="alert"> </div>
+
+</body>
+</html>
