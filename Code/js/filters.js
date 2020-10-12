@@ -7,13 +7,12 @@ var Filters = Filters || {};
 
 // Translate all selected vertices in the mesh by the given x,y,z offsets.
 Filters.translation = function(mesh, x, y, z) {
-  const t = new THREE.Vector3(x, y, z);
+  const T = new THREE.Vector3(x, y, z);
 
   const verts = mesh.getModifiableVertices();
-
-  const n_vertices = verts.length;
-  for (let i = 0; i < n_vertices; ++i) {
-    verts[i].position.add(t);
+  const N = verts.length;
+  for (let i = 0; i < N; ++i) {
+    verts[i].position.add(T);
   }
 
   mesh.calculateFacesArea();
@@ -24,14 +23,28 @@ Filters.translation = function(mesh, x, y, z) {
 // apply this rotation to all selected vertices in the mesh.
 Filters.rotation = function(mesh, x, y, z) {
   const verts = mesh.getModifiableVertices();
+  const N = verts.length;
+  
+  for (var i = 0; i < N; i++){
+    if (x !== 0){
+      var axis = new THREE.Vector3(1, 0, 0);
+      verts[i].position.applyAxisAngle(axis, x);
+    }
 
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 5 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Rotation is not implemented yet");
+    if (y !== 0){
+      var axis = new THREE.Vector3(0, 1, 0);
+      verts[i].position.applyAxisAngle(axis, y);
+    }
 
-  mesh.calculateFacesArea();
+    if (z !== 0){
+      var axis = new THREE.Vector3(0, 0, 1);
+      verts[i].position.applyAxisAngle(axis, z);
+    }
+  }
+
   mesh.updateNormals();
+  mesh.calculateFacesArea();
+
 };
 
 // Uniformly scale the position of all selected vertices in the mesh
@@ -39,10 +52,11 @@ Filters.rotation = function(mesh, x, y, z) {
 Filters.scale = function(mesh, s) {
   const verts = mesh.getModifiableVertices();
 
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 4 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Scaling is not implemented yet");
+  const N = verts.length;
+  for (let i = 0; i < N; ++i) {
+    verts[i].position.multiplyScalar(s);
+  }
+
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
