@@ -136,13 +136,21 @@ Filters.sharpen = function(mesh, iter, delta) {
 
 // Move every selected vertex along its normal direction
 // Scale the amount by the provided factor and average edge length at that vertex
-Filters.inflate = function(mesh, factor) {
-  const verts = mesh.getModifiableVertices();
+Filters.inflate = function (mesh, factor) {
 
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 16 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Inflate is not implemented yet");
+  var verts = mesh.getModifiableVertices();
+
+	var origMesh = new Mesh();
+	origMesh.copy(mesh);
+	var origVerts = origMesh.getModifiableVertices();
+
+	var N = verts.length;
+  for ( var i = 0 ; i < N ; ++i ) {
+		var avgLen = origMesh.averageEdgeLength(origVerts[i]);
+		var temp = new THREE.Vector3(origVerts[i].normal.x, origVerts[i].normal.y, origVerts[i].normal.z)
+		temp.multiplyScalar(factor * avgLen);
+    verts[i].position.add(temp);
+  }
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
@@ -151,12 +159,19 @@ Filters.inflate = function(mesh, factor) {
 // rotate selected vertices around the Y axis by an amount
 // proportional to its Y value times the scale factor.
 Filters.twist = function(mesh, factor) {
-  const verts = mesh.getModifiableVertices();
+  var verts = mesh.getModifiableVertices();
 
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 8 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Twist is not implemented yet");
+  var verts = mesh.getModifiableVertices();
+
+  var n_vertices = verts.length;
+	for ( var i = 0 ; i < n_vertices ; ++i ) { 
+		var vx = verts[i].position.getComponent(0);
+		var vy = verts[i].position.getComponent(1);
+		var vz = verts[i].position.getComponent(2);
+		var rot = vy*factor;
+		var t_y = new THREE.Vector3(Math.cos(rot)*vx+Math.sin(rot)*vz, vy, -Math.sin(rot)*vx+Math.cos(rot)*vz);
+        verts[i].position = t_y;
+  }
 
   mesh.calculateFacesArea();
   mesh.updateNormals();

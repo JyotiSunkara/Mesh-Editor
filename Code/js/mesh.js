@@ -7,14 +7,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // Return all vertices on face f
-Mesh.prototype.verticesOnFace = function(face) {
+Mesh.prototype.verticesOnFace = function(f) {
   const vertices = [];
-  let run = face.halfedge;
-  const first = run;
+  let runEdges = f.halfedge;
+  const first = runEdges;
   while (true) {
-    vertices.push(run.vertex);
-    run = run.next;
-    if (run === first) {
+    vertices.push(runEdges.vertex);
+    runEdges = runEdges.next;
+    if (runEdges === first) {
       break;
     }
   }
@@ -22,31 +22,32 @@ Mesh.prototype.verticesOnFace = function(face) {
 };
 
 // Return all halfedges on face f
-Mesh.prototype.edgesOnFace = function(face) {
+Mesh.prototype.edgesOnFace = function(f) {
   var halfedges = [];
-  var run = face.halfedge;
-  var first = run;
+  var runEdges = f.halfedge;
+  var first = runEdges;
   while (true) {
-      halfedges.push(run);
-      run = run.next;
-      if (run === first ) {
+      halfedges.push(runEdges);
+      runEdges = runEdges.next;
+      if (runEdges === first ) {
         break;
       }
   }
+
   return halfedges;
 };
 
 // Return all faces adjacent to input face, not
 // including input face.
-Mesh.prototype.facesOnFace = function(face) {
+Mesh.prototype.facesOnFace = function(f) {
 
   var faces = [];
-  var run = face.halfedge;
-  var first = run;
+  var runEdges = f.halfedge;
+  var first = runEdges;
   while ( true ) {
-    faces.push( run.opposite.face );
-    run = run.next;
-    if (run === first) {
+    faces.push(runEdges.opposite.face);
+    runEdges = runEdges.next;
+    if (runEdges === first) {
        break;
     }
   }
@@ -58,12 +59,12 @@ Mesh.prototype.facesOnFace = function(face) {
 // including the input vertex itself
 Mesh.prototype.verticesOnVertex = function(v) {
   var vertices = [];
-  var run = v.halfedge;
-  var first = run;
+  var runEdges = v.halfedge;
+  var first = runEdges;
   while (true) {
-    vertices.push(run.vertex);
-    run = run.opposite.next;
-    if (run === first ) {
+    vertices.push(runEdges.vertex);
+    runEdges = runEdges.opposite.next;
+    if (runEdges === first ) {
       break;
     }
   }
@@ -74,28 +75,28 @@ Mesh.prototype.verticesOnVertex = function(v) {
 // Return all halfedges that point away from v
 Mesh.prototype.edgesOnVertex = function(v) {
   var halfedges = [];
-  var run = v.halfedge;
-  var first = run;
+  var runEdges = v.halfedge;
+  var first = runEdges;
   while (true) {
-    halfedges.push( run );
-    run = run.opposite.next;
-    if (run === first) {
+    halfedges.push(runEdges);
+    runEdges = runEdges.opposite.next;
+    if (runEdges === first){
       break;
     }
   }
-  return halfedges;
+   return halfedges;
 };
 
 // Return all faces that include v as a vertex.
 Mesh.prototype.facesOnVertex = function(v) {
   var faces = [];
 
-  var run = v.halfedge;
-  var first = run;
-  while ( true ) {
-    faces.push( run.face );
-    run = run.opposite.next;
-    if ( run === first ) {
+  var runEdges = v.halfedge;
+  var first = runEdges;
+  while (true) {
+    faces.push(runEdges.face);
+    runEdges = runEdges.opposite.next;
+    if (runEdges === first) {
       break;
     }
   }
@@ -105,18 +106,16 @@ Mesh.prototype.facesOnVertex = function(v) {
 // Return the vertices that form the endpoints of a given edge
 Mesh.prototype.verticesOnEdge = function(e) {
   const vertices = [];
-
-  faces.push( e.vertex );
-  faces.push( e.opposite.vertex );
-
+  faces.push(e.vertex);
+  faces.push(e.opposite.vertex);
   return vertices;
 };
 
 // Return the faces that include a given edge
 Mesh.prototype.facesOnEdge = function(e) {
   const faces = [];
-  faces.push( e.face );
-  faces.push( e.opposite.face );
+  faces.push(e.face);
+  faces.push(e.opposite.face);
   return faces;
 };
 
@@ -125,12 +124,14 @@ Mesh.prototype.edgeBetweenVertices = function(v1, v2) {
   let outEdge = undefined;
   edges = this.edgesOnVertex(v1)
   var index = 0;
-  var run = edges[index]
-  var first = run;
+  var runEdges = edges[index]
+  var first = runEdges;
   while (true) {
-    if (run.vertex === v2) { outEdge = run }
+    if (runEdges.vertex === v2) { 
+      outEdge = runEdges 
+    }
     index = index + 1
-    run = edges[index]
+    runEdges = edges[index]
     if (index > edges.length - 1) {
       break;
     }
@@ -142,40 +143,44 @@ Mesh.prototype.edgeBetweenVertices = function(v1, v2) {
 // Analysis
 ////////////////////////////////////////////////////////////////////////////////
 
+Mesh.prototype.dist = function (v1, v2) {
+	var a = new THREE.Vector3(0, 0, 0)
+	a.copy(v1);
+	a.sub(v2);
+	return a.length();
+}
+
 // Return the surface area of a provided face f.
 Mesh.prototype.calculateFaceArea = function(f) {
-  let area = 0.0;
-  var he = f.halfedge;
-  var v1 = he.vertex;
-  var v2 = he.next.vertex;
-  var v3 = he.next.next.vertex;
-  var first = he.vertex;
-  var second = he.next.vertex;
-  while (true) {
-    var a = this.dist(v1.position, v2.position);
-    var b = this.dist(v2.position, v3.position);
-    var c = this.dist(v1.position, v3.position);
-    var s = 0.5 * (a + b + c);
-    var newArea = Math.sqrt(s * (s - a) * (s - b) * (s - c));
-		area = area + newArea;
-    he = he.next;
-    v1 = he.vertex;
-    v2 = he.next.vertex;
-    v3 = he.next.next.vertex;
-    if ( v1 === first || v1 === second) {
-      break;
+  var area = 0.0;
+    var he = f.halfedge;
+    var v1 = he.vertex;
+    var v2 = he.next.vertex;
+    var v3 = he.next.next.vertex;
+    var first = he.vertex;
+    var second = he.next.vertex;
+    while ( true ) {
+        var a = this.dist(v1.position, v2.position);
+        var b = this.dist(v2.position, v3.position);
+        var c = this.dist(v1.position, v3.position);
+        var s = 0.5 * (a + b + c);
+        var newArea = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+		    
+        area = area + newArea;
+        he = he.next;
+        var v1 = he.vertex;
+        var v2 = he.next.vertex;
+        var v3 = he.next.next.vertex;
+        if ( v1 === first || v1 === second) break;
     }
-  }
-
-  f.area = area;
-  return area;
+    return area;
 };
 
 // Update the area attributes of all faces in the mesh
 Mesh.prototype.calculateFacesArea = function() {
-  for (let i = 0; i < this.faces.length; ++i) {
-    this.calculateFaceArea(this.faces[i]);
-  }
+    for ( var i = 0; i < this.faces.length; ++i ) {
+      this.faces[i].area = this.calculateFaceArea( this.faces[i] );
+    }
 };
 
 // Calculate the vertex normal at a given vertex,
@@ -195,27 +200,26 @@ Mesh.prototype.calculateVertexNormal = function(v) {
 
 // update the vertex normals of every vertex in the mesh
 Mesh.prototype.updateVertexNormals = function() {
-  for (let i = 0; i < this.vertices.length; ++i) {
-    this.calculateVertexNormal(this.vertices[i]);
-  }
+   for ( var i = 0; i < this.vertices.length; ++i ) {
+      this.vertices[i].normal = this.calculateVertexNormal( this.vertices[i] );
+   }
 };
 
+
+
 // compute the average length of edges touching v
-Mesh.prototype.averageEdgeLength = function(v) {
-  let avg = 0.0;
+Mesh.prototype.averageEdgeLength = function ( v ) {
+  var avg = 0.0;
 
-  var edges = this.edgesOnVertex(v);
+	var edges = this.edgesOnVertex(v);
 	var lenSum = 0;
-
 	for (var i = 0; i < edges.length; ++i) {
 		var edgeLen = this.dist(edges[i].vertex.position, edges[i].opposite.vertex.position);
 		lenSum = lenSum + edgeLen;
 	}
-
 	if (edges.length != 0) {
 		avg = lenSum/edges.length;
 	}
-
   return avg;
 };
 
