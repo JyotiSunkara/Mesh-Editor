@@ -145,8 +145,7 @@ Mesh.prototype.edgeBetweenVertices = function(v1, v2) {
 
 Mesh.prototype.dist = function (v1, v2) {
 	var a = new THREE.Vector3(0, 0, 0)
-	a.copy(v1);
-	a.sub(v2);
+	a.copy(v1).sub(v2);
 	return a.length();
 }
 
@@ -186,16 +185,19 @@ Mesh.prototype.calculateFacesArea = function() {
 // Calculate the vertex normal at a given vertex,
 // using the face normals of bordering faces, weighted by face area
 Mesh.prototype.calculateVertexNormal = function(v) {
-  var v_faces = Mesh.prototype.facesOnVertex(v);
-	var v_normal = new THREE.Vector3( 0, 0, 0 );
-	for (var i = 0; i < v_faces.length; ++i) {
-		var temp = new THREE.Vector3(v_faces[i].normal.x, v_faces[i].normal.y, v_faces[i].normal.z);
-		temp.multiplyScalar(Mesh.prototype.calculateFaceArea(v_faces[i]));
-        v_normal.add(temp);;
+  var vFaces = Mesh.prototype.facesOnVertex(v);
+	var vNormal = new THREE.Vector3(0, 0, 0);
+	for (var i = 0; i < vFaces.length; ++i) {
+		var temp = new THREE.Vector3(vFaces[i].normal.x, 
+                                 vFaces[i].normal.y, 
+                                 vFaces[i].normal.z);
+
+		temp.multiplyScalar(Mesh.prototype.calculateFaceArea(vFaces[i]));
+    vNormal.add(temp);
   }
-	v_normal = v_normal.normalize();
-	
-  return v_normal;
+
+	vNormal = vNormal.normalize();
+  return vNormal;
 };
 
 // update the vertex normals of every vertex in the mesh

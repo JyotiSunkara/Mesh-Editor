@@ -57,7 +57,6 @@ Filters.scale = function(mesh, s) {
     verts[i].position.multiplyScalar(s);
   }
 
-
   mesh.calculateFacesArea();
   mesh.updateNormals();
 };
@@ -76,12 +75,11 @@ Filters.curvature = function(mesh) {
 // scale the random offset by the provided factor and by
 // the average length of edges at that vertex
 Filters.noise = function(mesh, factor) {
-  const verts = mesh.getModifiableVertices();
-
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 13 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Noise is not implemented yet");
+  var verts = mesh.getModifiableVertices();
+  var N = verts.length;
+  for ( var i = 0 ; i < N ; ++i ) {
+    verts[i].position.addScalar(mesh.averageEdgeLength(verts[i]) * factor * (Math.random() * 2 - 1));
+  }
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
@@ -110,26 +108,72 @@ Filters.noise = function(mesh, factor) {
 // times. It would be possible to replace a few of these steps with simple matrix
 // inversion; however, matrix inversion is far slower and less numerically stable
 //
-Filters.smooth = function(mesh, iter, delta, curvFlow, scaleDep, implicit) {
-  const verts = mesh.getModifiableVertices();
+Filters.smooth = function(mesh, iter, delta, curvFlow = false, scaleDep = false, implicit = false) {
+     for (var t = 0; t < iter; t++){
+        var verts = mesh.getModifiableVertices();
 
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 16 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Smooth is not implemented yet");
-  mesh.calculateFacesArea();
-  mesh.updateNormals();
+    //Calculate weighted averages
+    var averagePos = [];
+
+
+    //Calculates weighted for each vertex
+    for (var i = 0; i < verts.length; i++){
+        var sigma = mesh.averageEdgeLength(verts[i]);
+        var sumGaussian = 1;
+
+        var curPos = new THREE.Vector3(0, 0, 0);
+        curPos.copy(verts[i].position);
+ 
+        var neighbors = Mesh.prototype.verticesOnVertex(verts[i]);
+
+        for (var j = 0; j < neighbors.length; j++){
+            var gaussian = Math.exp(-verts[i].position.distanceToSquared(neighbors[j].position) / (2 * sigma * sigma));
+            sumGaussian += gaussian;
+
+            var tmpNeighbor = new THREE.Vector3(0, 0, 0);
+            tmpNeighbor.copy(neighbors[j].position);
+
+            //console.log("Tmp " + tmpNeighbor.x + ", " + tmpNeighbor.y + ", " + tmpNeighbor.z);
+
+            curPos.add(tmpNeighbor.multiplyScalar(gaussian));
+            //console.log("New " + curPos.x + ", " + curPos.y + ", " + curPos.z);
+        }
+
+        curPos.multiplyScalar(1/sumGaussian);
+        //console.log("PPos " + curPos.x + ", " + curPos.y + ", " + curPos.z);
+        //console.log("Pos " + curPos.x + ", " + curPos.y + ", " + curPos.z);
+        averagePos.push(curPos);
+    }
+
+    
+    for (var i = 0; i < verts.length; i++){
+        //console.log("Before " + verts[i].position.x + ", " + verts[i].position.y + ", " + verts[i].position.z);
+        verts[i].position = averagePos[i];
+        //console.log("After " + verts[i].position.x + ", " + verts[i].position.y + ", " + verts[i].position.z);
+    }
+
+    mesh.updateNormals();
+    mesh.calculateFacesArea();
+    }
 };
 
 // Sharpen the mesh by moving selected vertices away from the average position
 // of their neighbors (i.e. Laplacian smoothing in the negative direction)
 Filters.sharpen = function(mesh, iter, delta) {
-  const verts = mesh.getModifiableVertices();
+  var verts = mesh.getModifiableVertices();
 
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 9 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Sharpen is not implemented yet");
+	var smoothMesh = new Mesh();
+	smoothMesh.copy(mesh);
+	Filters.smooth(smoothMesh, iter, delta);
+	var smoothVerts = smoothMesh.getModifiableVertices();
+	
+	var N = verts.length;
+	for ( var i = 0 ; i < N ; ++i ) {
+    var pos = new THREE.Vector3(verts[i].position.x, verts[i].position.y, verts[i].position.z);
+		var diff = pos.sub(smoothVerts[i].position);
+		verts[i].position.add(diff);
+	}
+  
   mesh.calculateFacesArea();
   mesh.updateNormals();
 };
@@ -179,10 +223,27 @@ Filters.twist = function(mesh, factor) {
 
 // warp a mesh using a nonlinear mapping of your choice
 Filters.wacky = function(mesh, factor) {
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 3 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Wacky is not implemented yet");
+	var verts = mesh.getModifiableVertices();
+	var N = verts.length;
+	
+	var maxH, minH;
+	var minH = maxH = verts[0].position.y;
+
+	for ( var i = 0 ; i < N ; ++i ) {
+		if (verts[i].position.y > maxH) {
+			maxH = verts[i].position.y;
+		}
+		if (verts[i].position.y < minH) {
+			minH = verts[i].position.y;
+		}
+	}
+
+	var H = maxH - minH;
+
+  for ( var i = 0 ; i < N ; ++i ) {
+		  var temp = new THREE.Vector3(H/2*Math.sin(((verts[i].position.y/H) * 22)/(7 * factor)), 0, 0)
+      verts[i].position.add(temp);
+  }
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
@@ -191,11 +252,10 @@ Filters.wacky = function(mesh, factor) {
 // Convert the selected faces from arbitrary polygons into all triangles
 Filters.triangulate = function(mesh) {
   const faces = mesh.getModifiableFaces();
-
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 4 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("triangulate is not implemented yet");
+  var N = faces.length;
+  for ( var i = 0 ; i < N ; i++ ) { 
+        mesh.triangulateFace(faces[i]);
+  }
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
@@ -300,16 +360,73 @@ Filters.extrude = function(mesh, factor) {
 // Truncate the selected vertices of the mesh by "snipping off" corners
 // and replacing them with faces. factor specifies the size of the truncation.
 // See the spec for more detail.
-Filters.truncate = function(mesh, factor) {
-  const verts = mesh.getModifiableVertices();
+Filters.truncate = function ( mesh, factor ) {
 
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 64 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Truncate is not implemented yet");
+  origMesh = new Mesh();
+	origMesh.copy(mesh);
+	var orig_verts = origMesh.getModifiableVertices();
+	var verts = mesh.getModifiableVertices();
+	var n_verts = verts.length;
+	for ( var i = 0 ; i < n_verts ; ++i ) {
 
-  mesh.calculateFacesArea();
-  mesh.updateNormals();
+		//make new verts
+		var otherVerts = mesh.verticesOnVertex(verts[i]);
+		var newVerts = []
+		for (var v_i = 0; v_i < otherVerts.length-1; ++v_i) {
+			newVerts[v_i] = mesh.splitEdgeMakeVert(verts[i], otherVerts[v_i], factor);
+		}
+			
+		//make new face
+		for (var v_i = 0; v_i < newVerts.length-1; v_i++) {
+			faces_a = mesh.facesOnVertex(newVerts[v_i]);
+			faces_b = mesh.facesOnVertex(newVerts[(v_i+1)%newVerts.length]);
+			var common_face = undefined;
+			for (var f_i = 0; f_i < faces_a.length; f_i++) {
+				for (var f_j = 0; f_j < faces_b.length; f_j++) {
+					if (faces_a[f_i] === faces_b[f_j])
+						common_face = faces_a[f_i];
+				}
+			}
+			mesh.splitFaceMakeEdge(common_face, newVerts[v_i], newVerts[(v_i+1)%newVerts.length]);
+			
+			if (v_i > 0) { //only make one new face
+				var edge = mesh.edgeBetweenVertices(newVerts[v_i], verts[i]);
+				mesh.joinFaceKillEdgeSimple(edge);
+			}
+		}
+		
+
+		//move to correct spot base on origMesh
+		origOtherVerts = origMesh.verticesOnVertex(orig_verts[i]);
+		for (var v_i = 0; v_i < newVerts.length; v_i++) {
+			var new_pos = new THREE.Vector3( 0, 0, 0 );
+			var p1 = new THREE.Vector3( 0, 0 ,0 );
+			p1.copy( orig_verts[i].position );
+			var p2 = new THREE.Vector3( 0, 0 ,0 );
+			p2.copy( origOtherVerts[v_i].position );
+			new_pos.add( p1.multiplyScalar( 1 - factor ) );
+			new_pos.add( p2.multiplyScalar( factor ) );
+			newVerts[v_i].position = new_pos;
+		}
+		
+		
+		//move the last vertex
+		var new_pos = new THREE.Vector3( 0, 0, 0 );
+		var p1 = new THREE.Vector3( 0, 0 ,0 );
+		p1.copy( orig_verts[i].position );
+		var p2 = new THREE.Vector3( 0, 0 ,0 );
+		p2.copy( origOtherVerts[otherVerts.length-1].position );
+		new_pos.add( p1.multiplyScalar( 1 - factor ) );
+		new_pos.add( p2.multiplyScalar( factor ) );
+		verts[i].position = new_pos;
+		
+	}
+    // ----------- Our reference solution uses 54 lines of code.
+    // ----------- STUDENT CODE END ------------
+    //Gui.alertOnce ('Truncate is not implemented yet');
+
+    mesh.calculateFacesArea();
+    mesh.updateNormals();
 };
 
 // Apply the bevel operation to the mesh, scaling the degree of bevelling by factor
