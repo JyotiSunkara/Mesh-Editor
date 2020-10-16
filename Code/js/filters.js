@@ -11,7 +11,7 @@ Filters.translation = function(mesh, x, y, z) {
 
   const verts = mesh.getModifiableVertices();
   const N = verts.length;
-  for (let i = 0; i < N; ++i) {
+  for (var i = 0; i < N; ++i) {
     verts[i].position.add(T);
   }
 
@@ -31,12 +31,12 @@ Filters.rotation = function(mesh, x, y, z) {
       verts[i].position.applyAxisAngle(axis, x);
     }
 
-    if (y !== 0){
+    if (y !== 0) {
       var axis = new THREE.Vector3(0, 1, 0);
       verts[i].position.applyAxisAngle(axis, y);
     }
 
-    if (z !== 0){
+    if (z !== 0) {
       var axis = new THREE.Vector3(0, 0, 1);
       verts[i].position.applyAxisAngle(axis, z);
     }
@@ -53,7 +53,7 @@ Filters.scale = function(mesh, s) {
   const verts = mesh.getModifiableVertices();
 
   const N = verts.length;
-  for (let i = 0; i < N; ++i) {
+  for (var i = 0; i < N; ++i) {
     verts[i].position.multiplyScalar(s);
   }
 
@@ -108,72 +108,97 @@ Filters.noise = function(mesh, factor) {
 // times. It would be possible to replace a few of these steps with simple matrix
 // inversion; however, matrix inversion is far slower and less numerically stable
 //
-Filters.smooth = function(mesh, iter, delta, curvFlow = false, scaleDep = false, implicit = false) {
-     for (var t = 0; t < iter; t++){
-        var verts = mesh.getModifiableVertices();
+Filters.smooth = function(mesh, iter, delta, curvFlow, scaleDep, implicit) {
+  const verts = mesh.getModifiableVertices(); 
 
-    //Calculate weighted averages
-    var averagePos = [];
+  if (curvFlow){
+      this.triangulate(mesh);
+  }   
+  var neighbors = [];
+  for(var i = 0; i < verts.length; i++) {
+      neighbors.push(mesh.verticesOnVertex(verts[i]));
+  }
+  var he, v1, v2, edge2, new1;
+  var cosAlpha, sinAlpha, cotAlpha, cosBeta, sinBeta, cotBeta, w;
+  var vClone, nClone;
+  var sumNeighbors = new THREE.Vector3(0, 0, 0)
+  var weightsSum = 0;
+  while(iter--) {
+      var vertexArea = [], sumArea = 0;
+      var newVerts = [];
+      for(var i = 0; i < verts.length; i++) {
+        sumNeighbors = new THREE.Vector3(0, 0, 0)
+        weightsSum = 0;
+        vClone = verts[i].position.clone();
+        newVerts.push(vClone);
+        for(j in neighbors[i]) {
+            nClone = neighbors[i][j].position.clone();
+            if(!curvFlow) { 
+              sumNeighbors.add(nClone);
+              weightsSum++;  
+              
+            } 
+            
+            if(curvFlow) {
+              he = mesh.edgeBetweenVertices(verts[i], neighbors[i][j]);
+              v1 = he.next.vertex.position.clone(); 
+              v2 = he.opposite.next.vertex.position.clone();
+              edge2 = nClone.sub(v1);
+              new1 = vClone.sub(v1).clone();
 
+              cosAlpha = new1.dot(edge2);
+              sinAlpha = new1.cross(edge2).length();
+              cotAlpha = cosAlpha / sinAlpha;
 
-    //Calculates weighted for each vertex
-    for (var i = 0; i < verts.length; i++){
-        var sigma = mesh.averageEdgeLength(verts[i]);
-        var sumGaussian = 1;
+              cosBeta = new1.dot(edge2);
+              sinBeta = new1.cross(edge2).length();
+              cotBeta = cosBeta / sinBeta;
 
-        var curPos = new THREE.Vector3(0, 0, 0);
-        curPos.copy(verts[i].position);
- 
-        var neighbors = Mesh.prototype.verticesOnVertex(verts[i]);
-
-        for (var j = 0; j < neighbors.length; j++){
-            var gaussian = Math.exp(-verts[i].position.distanceToSquared(neighbors[j].position) / (2 * sigma * sigma));
-            sumGaussian += gaussian;
-
-            var tmpNeighbor = new THREE.Vector3(0, 0, 0);
-            tmpNeighbor.copy(neighbors[j].position);
-
-            //console.log("Tmp " + tmpNeighbor.x + ", " + tmpNeighbor.y + ", " + tmpNeighbor.z);
-
-            curPos.add(tmpNeighbor.multiplyScalar(gaussian));
-            //console.log("New " + curPos.x + ", " + curPos.y + ", " + curPos.z);
+              w = 0.5 * (cotAlpha + cotBeta);
+              sumNeighbors.add(nClone.multiplyScalar(w));
+              weightsSum = weightsSum + w;
+              
+            }
         }
 
-        curPos.multiplyScalar(1/sumGaussian);
-        //console.log("PPos " + curPos.x + ", " + curPos.y + ", " + curPos.z);
-        //console.log("Pos " + curPos.x + ", " + curPos.y + ", " + curPos.z);
-        averagePos.push(curPos);
-    }
+        faces = mesh.facesOnVertex(verts[i]);
+        var associatedArea = 0
+        for(var l = 0; l < faces.length; l++) {
+          if(scaleDep)
+            associatedArea += mesh.calculateFaceArea(faces[l]);
+        }
 
-    
-    for (var i = 0; i < verts.length; i++){
-        //console.log("Before " + verts[i].position.x + ", " + verts[i].position.y + ", " + verts[i].position.z);
-        verts[i].position = averagePos[i];
-        //console.log("After " + verts[i].position.x + ", " + verts[i].position.y + ", " + verts[i].position.z);
-    }
+        if(!scaleDep) {
+          vertexArea.push(1);
+          sumArea++;
 
-    mesh.updateNormals();
-    mesh.calculateFacesArea();
-    }
+        } 
+        
+        if(scaleDep) {
+          vertexArea.push(associatedArea);
+          sumArea = sumArea + associatedArea;
+        }
+
+        newVerts[i].add(sumNeighbors.add(verts[i].position.clone().negate().multiplyScalar(weightsSum)).multiplyScalar(delta / vertexArea[i]));
+      }
+
+      for(var i = 0; i < newVerts.length; i++) {
+        var avgArea = sumArea / newVerts.length;
+        newVerts[i].sub(verts[i].position).multiplyScalar(avgArea).add(verts[i].position);
+        verts[i].position.set(newVerts[i].x, newVerts[i].y, newVerts[i].z);
+      }
+  }
+
+  mesh.calculateFacesArea();
+  mesh.updateNormals();
 };
 
 // Sharpen the mesh by moving selected vertices away from the average position
 // of their neighbors (i.e. Laplacian smoothing in the negative direction)
 Filters.sharpen = function(mesh, iter, delta) {
-  var verts = mesh.getModifiableVertices();
 
-	var smoothMesh = new Mesh();
-	smoothMesh.copy(mesh);
-	Filters.smooth(smoothMesh, iter, delta);
-	var smoothVerts = smoothMesh.getModifiableVertices();
+	Filters.smooth(mesh, iter, -delta);
 	
-	var N = verts.length;
-	for ( var i = 0 ; i < N ; ++i ) {
-    var pos = new THREE.Vector3(verts[i].position.x, verts[i].position.y, verts[i].position.z);
-		var diff = pos.sub(smoothVerts[i].position);
-		verts[i].position.add(diff);
-	}
-  
   mesh.calculateFacesArea();
   mesh.updateNormals();
 };
@@ -183,17 +208,11 @@ Filters.sharpen = function(mesh, iter, delta) {
 Filters.inflate = function (mesh, factor) {
 
   var verts = mesh.getModifiableVertices();
-
-	var origMesh = new Mesh();
-	origMesh.copy(mesh);
-	var origVerts = origMesh.getModifiableVertices();
-
 	var N = verts.length;
   for ( var i = 0 ; i < N ; ++i ) {
-		var avgLen = origMesh.averageEdgeLength(origVerts[i]);
-		var temp = new THREE.Vector3(origVerts[i].normal.x, origVerts[i].normal.y, origVerts[i].normal.z)
-		temp.multiplyScalar(factor * avgLen);
-    verts[i].position.add(temp);
+		var avgLen = mesh.averageEdgeLength(verts[i]);
+		var normal = new THREE.Vector3(verts[i].normal.x, verts[i].normal.y, verts[i].normal.z);    
+    verts[i].position.add(normal.multiplyScalar(factor * avgLen));
   }
 
   mesh.calculateFacesArea();
@@ -203,18 +222,19 @@ Filters.inflate = function (mesh, factor) {
 // rotate selected vertices around the Y axis by an amount
 // proportional to its Y value times the scale factor.
 Filters.twist = function(mesh, factor) {
+  
   var verts = mesh.getModifiableVertices();
+  var N = verts.length;
 
-  var verts = mesh.getModifiableVertices();
-
-  var n_vertices = verts.length;
-	for ( var i = 0 ; i < n_vertices ; ++i ) { 
-		var vx = verts[i].position.getComponent(0);
-		var vy = verts[i].position.getComponent(1);
-		var vz = verts[i].position.getComponent(2);
-		var rot = vy*factor;
-		var t_y = new THREE.Vector3(Math.cos(rot)*vx+Math.sin(rot)*vz, vy, -Math.sin(rot)*vx+Math.cos(rot)*vz);
-        verts[i].position = t_y;
+  var vx, vy, vz, rot;
+	for ( var i = 0 ; i < N ; ++i ) { 
+		vx = verts[i].position.getComponent(0);
+		vy = verts[i].position.getComponent(1);
+		vz = verts[i].position.getComponent(2);
+		rot = vy * factor;
+    verts[i].position = new THREE.Vector3(Math.cos(rot) * vx + Math.sin(rot) * vz, 
+                                          vy,
+                                          -Math.sin(rot) * vx + Math.cos(rot) * vz);
   }
 
   mesh.calculateFacesArea();
@@ -225,24 +245,12 @@ Filters.twist = function(mesh, factor) {
 Filters.wacky = function(mesh, factor) {
 	var verts = mesh.getModifiableVertices();
 	var N = verts.length;
-	
-	var maxH, minH;
-	var minH = maxH = verts[0].position.y;
-
-	for ( var i = 0 ; i < N ; ++i ) {
-		if (verts[i].position.y > maxH) {
-			maxH = verts[i].position.y;
-		}
-		if (verts[i].position.y < minH) {
-			minH = verts[i].position.y;
-		}
-	}
-
-	var H = maxH - minH;
 
   for ( var i = 0 ; i < N ; ++i ) {
-		  var temp = new THREE.Vector3(H/2*Math.sin(((verts[i].position.y/H) * 22)/(7 * factor)), 0, 0)
-      verts[i].position.add(temp);
+		  var shear = new THREE.Vector3(Math.sin(((verts[i].position.y) * 22)/(7 * factor)), 
+                                    Math.cos(((verts[i].position.y) * 22)/(7 * factor)), 
+                                    0)
+      verts[i].position.add(shear);
   }
 
   mesh.calculateFacesArea();
@@ -266,7 +274,7 @@ Filters.splitEdge = function(mesh) {
   const verts = mesh.getSelectedVertices();
 
   if (verts.length === 2) {
-    mesh.splitEdgeMakeVert(verts[0], verts[1], 0.5);
+    mesh.splitEdgeMakeVert(verts[0], verts[1], 1/2);
   } else {
     console.log("ERROR: to use split edge, select exactly 2 adjacent vertices");
   }
@@ -280,7 +288,7 @@ Filters.joinEdges = function(mesh) {
   const verts = mesh.getSelectedVertices();
 
   if (verts.length === 3) {
-    let v0 = verts[0],
+    var v0 = verts[0],
       v1 = verts[1],
       v2 = verts[2];
 
@@ -347,12 +355,48 @@ Filters.joinFaces = function(mesh) {
 // See the spec for more detail.
 Filters.extrude = function(mesh, factor) {
   const faces = mesh.getModifiableFaces();
+  var N = faces.length;
 
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 32 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Extrude is not implemented yet");
+  for(var i = 0; i < N ; i++) {
+    var newVerts = [];
+		var oldVerts = mesh.verticesOnFace(faces[i]);
+    var oldEdges = mesh.edgesOnFace(faces[i]);
+    
+    for(var j = 0; j < oldEdges.length; j++) {
+      var o1 = oldEdges[j].vertex;
+      var o2 = oldEdges[j].opposite.vertex;
+      var newVert = mesh.splitEdgeMakeVert(o1, o2, 0);
 
+      facesOne = mesh.facesOnVertex(o1);
+      facesTwo = mesh.facesOnVertex(o2);
+      var commonFace = undefined;
+      for (var fi = 0; fi < facesOne.length; fi++) {
+        if (facesOne[fi] !== faces[i]) {
+          for (var fj = 0; fj < facesTwo.length; fj++) {
+                  if (facesOne[fi] === facesTwo[fj])
+                      commonFace = facesOne[fi];
+              }
+        }
+    }
+      
+      mesh.splitFaceMakeEdge(commonFace, newVert.halfedge.vertex, newVert.halfedge.opposite.next.vertex);
+      newVerts.push(newVert);
+    }
+    
+    for(var j = 0; j < newVerts.length; j++) {
+      
+      mesh.splitFaceMakeEdge(faces[i], newVerts[j], newVerts[(j + 1) % newVerts.length]);
+      var f1 = newVerts[j].halfedge.opposite.next.next.opposite.face;
+      var f2 = newVerts[j].halfedge.opposite.face;
+      var v1 = newVerts[j].halfedge.opposite.next.vertex;
+      var v2 = newVerts[j].halfedge.vertex;
+      mesh.joinFaceKillEdge(f1, f2, v1, v2);
+    }
+      
+    for(var j = 0; j < newVerts.length; j++)  {
+        newVerts[j].position.add(faces[i].normal.normalize().multiplyScalar(factor));
+    }
+  }
   mesh.calculateFacesArea();
   mesh.updateNormals();
 };
@@ -360,70 +404,63 @@ Filters.extrude = function(mesh, factor) {
 // Truncate the selected vertices of the mesh by "snipping off" corners
 // and replacing them with faces. factor specifies the size of the truncation.
 // See the spec for more detail.
-Filters.truncate = function ( mesh, factor ) {
+Filters.truncate = function (mesh, factor) {
 
-  origMesh = new Mesh();
+	origMesh = new Mesh();
 	origMesh.copy(mesh);
-	var orig_verts = origMesh.getModifiableVertices();
-	var verts = mesh.getModifiableVertices();
-	var n_verts = verts.length;
-	for ( var i = 0 ; i < n_verts ; ++i ) {
+	var origVerts = origMesh.getModifiableVertices(), verts = mesh.getModifiableVertices(), otherVerts, newVerts;
+	var N = verts.length, adjFace;
+	for (var i = 0 ; i < N ; ++i ) {
 
-		//make new verts
-		var otherVerts = mesh.verticesOnVertex(verts[i]);
-		var newVerts = []
-		for (var v_i = 0; v_i < otherVerts.length-1; ++v_i) {
-			newVerts[v_i] = mesh.splitEdgeMakeVert(verts[i], otherVerts[v_i], factor);
+		otherVerts = mesh.verticesOnVertex(verts[i]);
+		newVerts = []
+		for (var j = 0; j < otherVerts.length-1; ++j) {
+			newVerts[j] = mesh.splitEdgeMakeVert(verts[i], otherVerts[j], factor);
 		}
 			
-		//make new face
-		for (var v_i = 0; v_i < newVerts.length-1; v_i++) {
-			faces_a = mesh.facesOnVertex(newVerts[v_i]);
-			faces_b = mesh.facesOnVertex(newVerts[(v_i+1)%newVerts.length]);
-			var common_face = undefined;
-			for (var f_i = 0; f_i < faces_a.length; f_i++) {
-				for (var f_j = 0; f_j < faces_b.length; f_j++) {
-					if (faces_a[f_i] === faces_b[f_j])
-						common_face = faces_a[f_i];
+		for (var j = 0; j < newVerts.length - 1; j++) {
+      var v1 = newVerts[j];
+      var v2 = newVerts[(j + 1) % newVerts.length];
+			A = mesh.facesOnVertex(v1);
+			B = mesh.facesOnVertex(v2);
+			for (var k = 0; k < A.length; k++) {
+				for (var l = 0; l < B.length; l++) {
+					if (A[k] === B[l])
+						adjFace = A[k];
 				}
 			}
-			mesh.splitFaceMakeEdge(common_face, newVerts[v_i], newVerts[(v_i+1)%newVerts.length]);
+			mesh.splitFaceMakeEdge(adjFace, v1, v2);
 			
-			if (v_i > 0) { //only make one new face
-				var edge = mesh.edgeBetweenVertices(newVerts[v_i], verts[i]);
+			if (j > 0) { 
+				var edge = mesh.edgeBetweenVertices(v1, verts[i]);
 				mesh.joinFaceKillEdgeSimple(edge);
 			}
 		}
 		
 
-		//move to correct spot base on origMesh
-		origOtherVerts = origMesh.verticesOnVertex(orig_verts[i]);
-		for (var v_i = 0; v_i < newVerts.length; v_i++) {
-			var new_pos = new THREE.Vector3( 0, 0, 0 );
-			var p1 = new THREE.Vector3( 0, 0 ,0 );
-			p1.copy( orig_verts[i].position );
-			var p2 = new THREE.Vector3( 0, 0 ,0 );
-			p2.copy( origOtherVerts[v_i].position );
-			new_pos.add( p1.multiplyScalar( 1 - factor ) );
-			new_pos.add( p2.multiplyScalar( factor ) );
-			newVerts[v_i].position = new_pos;
+		origOtherVerts = origMesh.verticesOnVertex(origVerts[i]);
+		for (var j = 0; j < newVerts.length; j++) {
+			var newPos = new THREE.Vector3(0, 0, 0);
+			var p1 = new THREE.Vector3(0, 0 ,0);
+			var p2 = new THREE.Vector3(0, 0 ,0);
+			p1.copy(origVerts[i].position);
+			p2.copy(origOtherVerts[j].position);
+
+			newPos.add(p1.multiplyScalar(1 - factor)).add(p2.multiplyScalar(factor));
+			newVerts[j].position = newPos;
 		}
 		
 		
-		//move the last vertex
-		var new_pos = new THREE.Vector3( 0, 0, 0 );
-		var p1 = new THREE.Vector3( 0, 0 ,0 );
-		p1.copy( orig_verts[i].position );
-		var p2 = new THREE.Vector3( 0, 0 ,0 );
-		p2.copy( origOtherVerts[otherVerts.length-1].position );
-		new_pos.add( p1.multiplyScalar( 1 - factor ) );
-		new_pos.add( p2.multiplyScalar( factor ) );
-		verts[i].position = new_pos;
+		var newPos = new THREE.Vector3(0, 0, 0);
+		var p1 = new THREE.Vector3(0, 0 ,0);
+		var p2 = new THREE.Vector3(0, 0 ,0);
+		p1.copy(origVerts[i].position);
+		p2.copy(origOtherVerts[otherVerts.length-1].position);
+
+		newPos.add(p1.multiplyScalar(1 - factor)).add(p2.multiplyScalar(factor));
+		verts[i].position = newPos;
 		
 	}
-    // ----------- Our reference solution uses 54 lines of code.
-    // ----------- STUDENT CODE END ------------
-    //Gui.alertOnce ('Truncate is not implemented yet');
 
     mesh.calculateFacesArea();
     mesh.updateNormals();
@@ -433,11 +470,43 @@ Filters.truncate = function ( mesh, factor ) {
 Filters.bevel = function ( mesh, factor ) {
 
     var verts = mesh.getModifiableVertices();
+    this.truncate(mesh, factor);
+    var origFaces = mesh.getModifiableFaces();
+    var faces = [];
+    var newFaces = [];
+    var removedEdge = new Set();
 
-    // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 104 lines of code.
-    // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('Bevel is not implemented yet');
+    for(var i = 0; i < origFaces.length; i++) {
+      if(mesh.verticesOnFace(origFaces[i]).length == 3) {
+        faces.push(origFaces[i]);
+      }
+    }
+    
+    for(var i = 0; i < faces.length; i++) {
+      var halfedges = mesh.edgesOnFace(faces[i]);
+      for(var j = 0; j < halfedges.length; j++) {
+        var v1 = halfedges[j].vertex;
+        var v2 = halfedges[j].opposite.vertex;
+        var f1 = halfedges[j].opposite.face
+        newFaces.push([mesh.splitEdgeMakeVert(v1, v2, 1/2), f1]);
+      }
+    }
+
+    
+    for(var i = 0; i < newFaces.length; i++) {
+      var f1 = newFaces[i][1]
+      var f2 = newFaces[i][0]
+      var f3 = f2.halfedge.opposite.next.next.next.vertex
+      mesh.splitFaceMakeEdge(f1, f2, f3);
+      var edge = mesh.edgeBetweenVertices(f2.halfedge.opposite.next.next.vertex,
+                                          f2.halfedge.opposite.next.vertex)
+      removedEdge.add(edge);
+    }
+    // Set iteration
+    for(var edge of removedEdge) {
+      mesh.joinFaceKillEdge(edge.face, edge.opposite.face, edge.vertex, edge.opposite.vertex);
+      mesh.joinEdgeKillVert(edge.vertex.halfedge.vertex, edge.vertex, edge.vertex.halfedge.opposite.next.vertex)
+    }
 
     mesh.calculateFacesArea();
     mesh.updateNormals();
@@ -446,54 +515,317 @@ Filters.bevel = function ( mesh, factor ) {
 // Split the longest edges in the mesh into shorter edges.
 // factor is a float in [0,1]. it tells the proportion
 // of the total number of edges in the mesh that should be split.
-Filters.splitLong = function(mesh, factor) {
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 35 lines of code.
-  // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Split Long Edges is not implemented yet");
+Filters.splitLong = function ( mesh, factor  ) {
+  var initFaces, intEdges = [], faces, edges, longEdge, longDist, vertices, count;
 
-  mesh.calculateFacesArea();
-  mesh.updateNormals();
+	initFaces = mesh.getModifiableFaces();
+	for (var i = 0; i < initFaces.length; i++) {
+		var fEdges = mesh.edgesOnFace(initFaces[i]);
+		for (var j = 0; j < fEdges.length; j++) {
+			if(intEdges.indexOf(fEdges[j]) == -1) 
+				intEdges.push(fEdges[j]);
+		}
+	}
+  var iterations = factor * intEdges.length;
+	
+	while (iterations--) {
+		var faces = mesh.getModifiableFaces();
+		var edges = [];
+		for (var i = 0; i < faces.length; i++) {
+			var fEdges = mesh.edgesOnFace(faces[i]);
+			for (var j = 0; j < fEdges.length; j++) {
+				if(edges.indexOf(fEdges[j]) == -1) 
+					edges.push(fEdges[j]);
+			}
+		}
+
+		
+		longDist = Number.MIN_SAFE_INTEGER;
+    var initFaces, intEdges = [], faces, edges, longEdge, longDist, vertices, count;
+    
+		for (var j = 0; j < edges.length; j++) {
+			var d = mesh.dist(edges[j].vertex.position, edges[j].opposite.vertex.position);
+			if (d > longDist) {
+				longDist = d;
+				longEdge = edges[j];
+			}
+		}
+		
+		vertices = mesh.verticesOnFace(longEdge.face);
+		count = 0;
+		var v = vertices[count], v1 = longEdge.vertex, v2 = longEdge.opposite.vertex;
+		while (true) {
+			if (v !== v1){
+        if(v !== v2) {
+				    break;
+        }
+      }
+			v = vertices[++count];
+		}
+		
+		var newVert = mesh.splitEdgeMakeVert(v1, v2, 0.5);
+		mesh.splitFaceMakeEdge(longEdge.face, newVert, v);
+	}
+
+    mesh.calculateFacesArea();
+    mesh.updateNormals();
 };
 
 // Triangulate a mesh, and apply triangular subdivision to its faces.
 // Repeat for the specified number of levels.
-Filters.triSubdiv = function(mesh, levels) {
-  Filters.triangulate(mesh);
+Filters.triSubdiv = function (mesh, levels) {
+    Filters.triangulate( mesh );
+    while(levels--) {
+        var faces = mesh.getModifiableFaces();
+        var N = faces.length
+        var vertI = 0, oldI = 0, newI = 0;
+        var v1, v2, v3, v4, v5, v6, he1, he2, he3;
+        var vertsOld = [], newVerts = [], verts = [];
 
-  for (let l = 0; l < levels; l++) {
-    const faces = mesh.getModifiableFaces();
-    // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 43 lines of code.
-    // ----------- STUDENT CODE END ------------
-    Gui.alertOnce("Triangle subdivide is not implemented yet");
-  }
+        for (var i = 0; i < N; i++) {
+            var vertices = mesh.verticesOnFace( faces[i] )
+            for ( var j = 0; j < 3; ++j, vertI++) { 
+                vertsOld[vertI] = vertices[j]; 
+            }
+        }
 
-  mesh.calculateFacesArea();
-  mesh.updateNormals();
+        for ( var i = 0; i < N; i++, newI++) {
+            verts = []
+            for ( var j = 0; j < 3; j++, oldI++) { 
+                verts.push(vertsOld[oldI]); 
+            }
+
+            v1 = verts[0]
+            v2 = verts[1]
+            v3 = verts[2]
+            he1 = mesh.edgeBetweenVertices(v1, v2);
+            he2 = mesh.edgeBetweenVertices(v1, v3);
+            he3 = mesh.edgeBetweenVertices(v2, v3);
+
+            if (he1) v4 = mesh.splitEdgeMakeVert(v1, v2, 1/2) 
+            if (he2) v5 = mesh.splitEdgeMakeVert(v1, v3, 1/2) 
+            if (he3) v6 = mesh.splitEdgeMakeVert(v2, v3, 1/2) 
+            // Then
+            if (!he1) v4 = mesh.vertBetweenVertices (v1,v2)  
+            if (!he2) v5 = mesh.vertBetweenVertices (v1,v3)  
+            if (!he3) v6 = mesh.vertBetweenVertices (v2,v3)  
+
+            newVerts[newI] = v4;
+            newI = newI + 1;
+            newVerts[newI] = v5;
+            newI = newI + 1;
+            newVerts[newI] = v6;   
+        }
+
+        for (var i = 0, vi = 0; i < N; i ++) {
+            verts = []
+            for ( var j = 0; j < 3; j++, vi++) { 
+                verts.push(newVerts[vi]); 
+            }
+            v4 = verts[0]
+            v5 = verts[1]
+            v6 = verts[2]
+            f1 = mesh.splitFaceMakeEdge(faces[i], v4, v6, v5, true)
+            f2 = mesh.splitFaceMakeEdge(f1, v4, v5, v6, true)
+            mesh.splitFaceMakeEdge(f2, v5, v6, v4, true) 
+        }
+    }
+
+    mesh.calculateFacesArea();
+    mesh.updateNormals();
 };
 
-// Triangulate the mesh and apply loop subdivision to the faces
-// repeat for the specified number of levels.
-Filters.loop = function(mesh, levels) {
-  Filters.triangulate(mesh);
+//Triangulate the mesh and apply loop subdivision to the faces
+//repeat for the specified number of levels.
+Filters.loop = function (mesh, levels) {
+    Filters.triangulate(mesh);
+    betaOne = 3 / 8
+    betaTwo = 1 /8
 
-  for (let l = 0; l < levels; l++) {
-    const faces = mesh.getModifiableFaces();
-    // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 123 lines of code.
-    // ----------- STUDENT CODE END ------------
-    Gui.alertOnce("Triangle subdivide is not implemented yet");
-  }
+    while(levels--) {
+        var faces = mesh.getModifiableFaces();
+        var N = faces.length;    
 
-  mesh.calculateFacesArea();
-  mesh.updateNormals();
+        var oldVerts = [];
+        var vertI = 0;
+
+        for (var i = 0; i < N; i++) {
+            var vertices = mesh.verticesOnFace(faces[i])
+            for (var j = 0; j < 3; ++j, vertI++) { 
+                oldVerts[vertI] = vertices[j]; 
+            }
+        }
+
+        var iOld = 0, iNew = 0, he1, he2, he3;
+        var v1, v2, v3, v4, v5, v6;
+        var newVerts = [], verts = [];
+        var oldX = [], oldY = [], oldZ = [], newX = [], newY = [], newZ = [];
+        var selfX, selfY, selfZ, totalX, totalY, totalZ, otherX, otherY, otherZ;
+        var neighbors, beta;
+
+        for (var i = 0; i < N; i++, iNew++) {
+            verts = []
+            
+            for (var j = 0; j < 3; j++, iOld++) { 
+                verts[j] = oldVerts[iOld]; 
+            }
+
+            v1 = verts[0]
+            v2 = verts[1]
+            v3 = verts[2]
+
+            he1 = mesh.edgeBetweenVertices(v1, v2);
+            he2 = mesh.edgeBetweenVertices(v1, v3);
+            he3 = mesh.edgeBetweenVertices(v2, v3);
+
+            if (he1) v4 = mesh.splitEdgeMakeVert(v1, v2, 1/2) 
+            if (he2) v5 = mesh.splitEdgeMakeVert(v1, v3, 1/2) 
+            if (he3) v6 = mesh.splitEdgeMakeVert(v2, v3, 1/2) 
+
+            // Then
+
+            if (!he1) v4 = mesh.vertBetweenVertices (v1,v2)  
+            if (!he2) v5 = mesh.vertBetweenVertices (v1,v3)  
+            if (!he3) v6 = mesh.vertBetweenVertices (v2,v3)  
+
+            newVerts[iNew] = v4;
+            iNew = iNew + 1;
+            newVerts[iNew] = v5;
+            iNew = iNew + 1;
+            newVerts[iNew] = v6;   
+        }
+
+        var opp1, opp2
+        var twoFaces = mesh.facesOnVertices(v1, v2)
+        var face1 = twoFaces[0]
+        var face2 = twoFaces[1]
+        var verts1 = mesh.verticesOnFace(face1)
+        var verts2 = mesh.verticesOnFace(face2)
+        var index1 = 0, index2 = 0;
+        var ringVerts, locSum;
+
+
+
+        for (var i = 0; i < 1; i ++) {
+            totalX = 0;
+            totalY = 0; 
+            totalZ = 0;
+            neighbors = mesh.verticesOnVertex(oldVerts[i])
+
+            if (oldVerts.length > 3) { 
+              beta = 3 / (8 * oldVerts.length) 
+            } else { 
+              beta = 3 / 16 
+            }
+
+            for (var j = 0; j < neighbors.length; j ++) {
+                totalX = totalX + beta * neighbors[j].position.x
+                totalY = totalY + beta * neighbors[j].position.y
+                totalZ = totalZ + beta * neighbors[j].position.z
+            }
+
+            selfX = (1 - (neighbors.length * beta)) * oldVerts[i].position.x
+            selfY = (1 - (neighbors.length * beta)) * oldVerts[i].position.y
+            selfZ = (1 - (neighbors.length * beta)) * oldVerts[i].position.z
+
+            oldX[i] = totalX + selfX
+            oldY[i] = totalY + selfX
+            oldZ[i] = totalZ + selfX
+        }
+
+        for (var i = 0; i < newVerts.length; i++) {
+            totalX = 0; 
+            totalY = 0; 
+            totalZ = 0;
+            neighbors = mesh.verticesOnVertex(newVerts[i])
+
+            totalX = totalX + beta * neighbors[0].position.x + beta * neighbors[1].position.x;
+            totalY = totalY + beta * neighbors[0].position.y + beta * neighbors[1].position.y;
+            totalZ = totalZ + beta * neighbors[0].position.z + beta * neighbors[1].position.z;
+            
+            index1 = 0;
+            index2 = 0;
+
+            do {
+              if (verts1[index1] !== neighbors[0]) {
+                  if(verts1[index1] !== neighbors[1]) { 
+                      opp1 = verts1[index1]; 
+                  }
+              }
+              index1++;
+              if (index1 > verts1.length - 1) {
+                  break;
+              }
+            } while(true)
+
+
+            do {
+                if (verts2[index2] !== neighbors[0]){
+                    if (verts2[index2] !== neighbors[1]) { 
+                        opp2 = verts2[index2]; 
+                    }
+                }
+                index2++;
+
+                if (index2 > verts2.length - 1) {
+                    break;
+                }
+            } while(true)
+
+            otherX = betaTwo * opp1.position.x + betaTwo * opp2.position.x
+            otherY = betaTwo * opp1.position.y + betaTwo * opp2.position.y
+            otherZ = betaTwo * opp1.position.z + betaTwo * opp2.position.z
+           
+            newX[i] = totalX + otherX
+            newY[i] = totalY + otherY
+            newZ[i] = totalZ + otherZ
+        }
+
+        for (var i = 0, vi = 0; i < N; i ++) {
+            var verts = []
+            
+            for (var j = 0; j < 3; j++, vi++) { 
+                verts[j] = newVerts[vi]; 
+            }
+
+            v4 = verts[0]
+            v5 = verts[1]
+            v6 = verts[2]
+
+            f1 = mesh.splitFaceMakeEdge(faces[i], v4, v6, v5, true)
+            f2 = mesh.splitFaceMakeEdge(f1, v4, v5, v6, true)
+            f3 = mesh.splitFaceMakeEdge(f2, v5, v6, v4, true) 
+
+        }
+        for (var i = 0; i < newVerts.length; i ++) {
+            ringVerts = mesh.verticesOnVertex(newVerts[i]);
+            locSum = new THREE.Vector3(0,0,0);
+            for (var j = 0; j < ringVerts.length; j++) {
+                locSum.add(ringVerts[j].position);
+            }
+            newVerts[i].position = locSum.divideScalar(ringVerts.length);
+        }
+
+        for (var i = 0; i < oldVerts.length; i ++) {
+            ringVerts = mesh.verticesOnVertex(oldVerts[i]);
+            locSum = new THREE.Vector3(0,0,0);
+            for (var j = 0; j < ringVerts.length; j++) {
+                locSum.add(ringVerts[j].position);
+            }
+            oldVerts[i].position = locSum.divideScalar(ringVerts.length);
+        }
+
+    }
+
+    mesh.calculateFacesArea();
+    mesh.updateNormals();
 };
+
 
 // Requires a quad mesh. Apply quad subdivision to the faces of the mesh.
 // Repeat for the specified number of levels.
 Filters.quadSubdiv = function(mesh, levels) {
-  for (let l = 0; l < levels; l++) {
+  for (var l = 0; l < levels; l++) {
     const faces = mesh.getModifiableFaces();
     // ----------- STUDENT CODE BEGIN ------------
     // ----------- Our reference solution uses 55 lines of code.
@@ -508,7 +840,7 @@ Filters.quadSubdiv = function(mesh, levels) {
 // Apply catmull clark subdivision to the faces of the mesh.
 // Repeat for the specified number of levels.
 Filters.catmullClark = function(mesh, levels) {
-  for (let l = 0; l < levels; l++) {
+  for (var l = 0; l < levels; l++) {
     const faces = mesh.faces;
     // ----------- STUDENT CODE BEGIN ------------
     // ----------- Our reference solution uses 102 lines of code.
@@ -525,12 +857,12 @@ Filters.catmullClark = function(mesh, levels) {
 // internal function for selecting faces in the form of a loop
 Filters.procFace = function(mesh, f) {
   const faceFlags = new Array(mesh.faces.length);
-  for (let i = 0; i < mesh.faces.length; i++) {
+  for (var i = 0; i < mesh.faces.length; i++) {
     faceFlags[i] = 0;
   }
-  let sum = f.area;
+  var sum = f.area;
   const start_he = f.halfedge.opposite.next;
-  let curr_he = start_he;
+  var curr_he = start_he;
   do {
     if (faceFlags[curr_he.face.id] > 0) {
       break;
@@ -556,7 +888,7 @@ Filters.parseSelected = function(sel) {
   // sel = sel.replace(/[\(\)]/g,'');
   sel = sel.split(",");
   const parsedSel = [];
-  for (let i = 0; i < sel.length; i++) {
+  for (var i = 0; i < sel.length; i++) {
     const idx = parseInt(sel[i]);
     if (!isNaN(idx)) {
       parsedSel.push(idx);

@@ -711,3 +711,69 @@ Mesh.prototype.getSelectedVertexIds = function() {
   }
   return sel;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// Utils By Me
+////////////////////////////////////////////////////////////////////////////////
+
+Mesh.prototype.vertBetweenVertices = function (v1, v2) {
+    var vertices1 = this.verticesOnVertex(v1)
+    var vertices2 = this.verticesOnVertex(v2)
+    var index1, index2, vertice;
+    index1 = index2 = 0;
+    var vvOne = vertices1[0]
+    var vvTwo = vertices2[0]
+    while (true) {
+        if (vvOne === vvTwo) { 
+          vertice = vvOne; 
+        }
+        vvOne = vertices1[index1]
+        vvTwo = vertices2[index2]
+        index1++;
+        if (index1 > vertices1.length) { 
+          index1 = 0; 
+          index2++; 
+        } 
+
+        if (index2 > vertices2.length) {
+          break;
+        } 
+    }
+    return vertice;
+};
+
+Mesh.prototype.dist = function (v1, v2) {
+	var a = new THREE.Vector3(0, 0, 0);
+	return a.copy(v1).sub(v2).length();
+};
+
+Mesh.prototype.facesOnVertices = function (v1, v2) {
+    var index1, index2, indexR;
+    index1 = index2 = indexR = 0;
+
+    var faces = [ 0, 0 ];
+    var faces1 = this.facesOnVertex(v1)
+    var faces2 = this.facesOnVertex(v2)
+
+
+    var f1 = faces1[0]
+    var f2 = faces2[0]
+    while (true) {
+        if (f1 === f2) { 
+          faces[indexR] = f1; 
+          indexR++;
+        }
+        f1 = faces1[index1]
+        f2 = faces2[index2]
+        index1++
+        if (index1 > faces1.length ) { 
+          index1 = 0; 
+          index2++; 
+        }
+
+        if (index2 > faces2.length ) {
+          break;
+        }
+    }
+    return faces;
+};

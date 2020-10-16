@@ -80,7 +80,7 @@ Mesh.prototype.edgesOnVertex = function(v) {
   while (true) {
     halfedges.push(runEdges);
     runEdges = runEdges.opposite.next;
-    if (runEdges === first){
+    if (runEdges === first) {
       break;
     }
   }
@@ -143,34 +143,40 @@ Mesh.prototype.edgeBetweenVertices = function(v1, v2) {
 // Analysis
 ////////////////////////////////////////////////////////////////////////////////
 
-Mesh.prototype.dist = function (v1, v2) {
-	var a = new THREE.Vector3(0, 0, 0)
-	a.copy(v1).sub(v2);
-	return a.length();
-}
-
 // Return the surface area of a provided face f.
 Mesh.prototype.calculateFaceArea = function(f) {
-  var area = 0.0;
-    var he = f.halfedge;
-    var v1 = he.vertex;
-    var v2 = he.next.vertex;
-    var v3 = he.next.next.vertex;
-    var first = he.vertex;
-    var second = he.next.vertex;
-    while ( true ) {
-        var a = this.dist(v1.position, v2.position);
-        var b = this.dist(v2.position, v3.position);
-        var c = this.dist(v1.position, v3.position);
-        var s = 0.5 * (a + b + c);
+    var area = 0.0;
+    var runEdge, first, second;
+    var v1, v2, v3;
+
+    // Herons Formula for triangle
+    var a, b, c, s;
+
+    
+    runEdge = f.halfedge;
+    first = runEdge.vertex;
+    second = runEdge.next.vertex;
+
+    v1 = runEdge.vertex;
+    v2 = runEdge.next.vertex;
+    v3 = runEdge.next.next.vertex;
+
+
+    while (true) {
+        a = this.dist(v1.position, v2.position);
+        b = this.dist(v2.position, v3.position);
+        c = this.dist(v1.position, v3.position);
+        s = 0.5 * (a + b + c);
         var newArea = Math.sqrt(s * (s - a) * (s - b) * (s - c));
 		    
         area = area + newArea;
-        he = he.next;
-        var v1 = he.vertex;
-        var v2 = he.next.vertex;
-        var v3 = he.next.next.vertex;
-        if ( v1 === first || v1 === second) break;
+        runEdge = runEdge.next;
+        v1 = runEdge.vertex;
+        v2 = runEdge.next.vertex;
+        v3 = runEdge.next.next.vertex;
+        if (v1 === first || v1 === second) {
+          break;
+        }
     }
     return area;
 };
@@ -178,7 +184,7 @@ Mesh.prototype.calculateFaceArea = function(f) {
 // Update the area attributes of all faces in the mesh
 Mesh.prototype.calculateFacesArea = function() {
     for ( var i = 0; i < this.faces.length; ++i ) {
-      this.faces[i].area = this.calculateFaceArea( this.faces[i] );
+      this.faces[i].area = this.calculateFaceArea(this.faces[i]);
     }
 };
 
@@ -188,12 +194,12 @@ Mesh.prototype.calculateVertexNormal = function(v) {
   var vFaces = Mesh.prototype.facesOnVertex(v);
 	var vNormal = new THREE.Vector3(0, 0, 0);
 	for (var i = 0; i < vFaces.length; ++i) {
-		var temp = new THREE.Vector3(vFaces[i].normal.x, 
-                                 vFaces[i].normal.y, 
-                                 vFaces[i].normal.z);
+		var normal = new THREE.Vector3(vFaces[i].normal.x, 
+                                   vFaces[i].normal.y, 
+                                   vFaces[i].normal.z);
 
-		temp.multiplyScalar(Mesh.prototype.calculateFaceArea(vFaces[i]));
-    vNormal.add(temp);
+		normal.multiplyScalar(Mesh.prototype.calculateFaceArea(vFaces[i]));
+    vNormal.add(normal);
   }
 
 	vNormal = vNormal.normalize();
@@ -203,7 +209,7 @@ Mesh.prototype.calculateVertexNormal = function(v) {
 // update the vertex normals of every vertex in the mesh
 Mesh.prototype.updateVertexNormals = function() {
    for ( var i = 0; i < this.vertices.length; ++i ) {
-      this.vertices[i].normal = this.calculateVertexNormal( this.vertices[i] );
+      this.vertices[i].normal = this.calculateVertexNormal(this.vertices[i]);
    }
 };
 
@@ -215,8 +221,9 @@ Mesh.prototype.averageEdgeLength = function ( v ) {
 
 	var edges = this.edgesOnVertex(v);
 	var lenSum = 0;
-	for (var i = 0; i < edges.length; ++i) {
-		var edgeLen = this.dist(edges[i].vertex.position, edges[i].opposite.vertex.position);
+	for (let i = 0; i < edges.length; ++i) {
+		var edgeLen = this.dist(edges[i].vertex.position, 
+                            edges[i].opposite.vertex.position);
 		lenSum = lenSum + edgeLen;
 	}
 	if (edges.length != 0) {
@@ -232,20 +239,23 @@ Mesh.prototype.averageEdgeLength = function ( v ) {
 // Given a face in the shape of an arbitrary polygon,
 // split that face so it consists only of several triangular faces. 
 Mesh.prototype.triangulateFace = function(f) {
-  var he = f.halfedge;
-  var first = he.vertex;
-  var second = he.next.vertex;
-  var v1 = he.next.vertex;
-  var v2 = he.next.next.vertex;
-  var v3 = he.next.next.next.vertex;
+  var runEdge = f.halfedge;
+  var first = runEdge.vertex;
+  var second = runEdge.next.vertex;
+  var v1, v2, v3;
+  v1 = runEdge.next.vertex;
+  v2 = runEdge.next.next.vertex;
+  v3 = runEdge.next.next.next.vertex;
   while (true) {
-    if (v3 === first || v2 === first || v1 === first) {
+    if (v1 === first || v2 === first || v3 === first) {
       break;
     }
-    this.splitFaceMakeEdge (f, first, v2, second, true)
-    he = he.next;
-    var v1 = he.vertex;
-    var v2 = he.next.vertex;
-    var v3 = he.next.next.vertex;
+    this.splitFaceMakeEdge(f, first, v2, second, true)
+    runEdge = runEdge.next;
+    v1 = runEdge.vertex;
+    v2 = runEdge.next.vertex;
+    v3 = runEdge.next.next.vertex;
   }
 };
+
+
